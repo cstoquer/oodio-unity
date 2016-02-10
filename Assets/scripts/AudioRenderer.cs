@@ -46,21 +46,15 @@ public class AudioRenderer : MonoBehaviour {
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 	// Use this for initialization
 	void Start () {
-		oscA = new OscRamp();
-		flt = new RCFilter();
+		oscA     = new OscRamp();
+		flt      = new RCFilter();
 		kickDrum = new Sampler(kickSample);
-		vca = new Envelope();
+		vca      = new Envelope();
 
 		flt.input = oscA.output; // TODO: connect method
 
-		slidderCut.onValueChanged.AddListener((float v) => {
-			flt.cut = v;
-		});
-
-		slidderRez.onValueChanged.AddListener((float v) => {
-			flt.rez = v;
-		});
-
+		slidderCut.onValueChanged.AddListener((float v) => { flt.cut = v; });
+		slidderRez.onValueChanged.AddListener((float v) => { flt.rez = v; });
 
 		Tempo = 133f;
 
@@ -69,7 +63,7 @@ public class AudioRenderer : MonoBehaviour {
 	}
 
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-	void clk_tick () {
+	void clk_tick() {
 		clk_pos += clk_inc;
 		if (clk_pos >= 1) {
 			clk_pos -= 1;
@@ -78,27 +72,26 @@ public class AudioRenderer : MonoBehaviour {
 	}
 
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-	void seq_tick () {
+	void seq_tick() {
 		if (++seq_pos >= seq_stp.Length) seq_pos = 0;
 		seq_out = freqTable.GetNote(seq_stp[seq_pos]);
 		oscA.Freq = seq_out;
 		if (seq_trg[seq_pos]) vca.Retrig();
 		if (seq_kck [seq_pos]) kickDrum.Retrig();
 	}
-	
+
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 	void OnAudioFilterRead(float[] buffer, int channels) {
-		for (var i = 0; i < buffer.Length; i += channels) {
+		for (int i = 0; i < buffer.Length; i += channels) {
 			if (++kCounter == 64) {
 				kCounter = 0;
 				clk_tick();
 				vca.Tick();
 			}
-			flt.Tick ();
+			flt.Tick();
 			oscA.Tick();
-			kickDrum.Tick ();
+			kickDrum.Tick();
 			float val = vca.output.signal * flt.output.signal + kickDrum.output.signal;
-			//val *= 0.2f;
 			buffer[i]     = val;
 			buffer[i + 1] = val;
 		}
