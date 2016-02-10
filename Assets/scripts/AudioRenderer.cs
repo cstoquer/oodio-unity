@@ -2,6 +2,8 @@
 using System.Collections;
 using UnityEngine.UI;
 using System;
+using Synth.Core;
+using Synth.Modules;
 
 public class AudioRenderer : MonoBehaviour {
 	public AudioClip kickSample;
