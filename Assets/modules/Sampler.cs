@@ -1,28 +1,32 @@
-﻿public class OscRamp {
-	private float freq;
-	private float pos;
-	private float inc;
-	public  AudioSignal output;
+﻿using UnityEngine;
+using System.Collections;
+
+public class Sampler {
+	public AudioSignal output;
+
+	private float[]   data;
+	private int       len;
+	private int       pos = 0;
+
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-	public  float Freq {
-		get {
-			return freq;
-		}
-		set {
-			freq = value;
-			inc = value / CONST.SAMPLE_RATE;
-		}
+	public Sampler(AudioClip sample) {
+		output = new AudioSignal();
+		pos = 0;
+
+		// get samples data
+		len = sample.samples;
+		data = new float[len];
+		sample.GetData (data, 0);
 	}
+
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-	public OscRamp() {
-		pos = 0f;
-		Freq = 440f;
-		output = new AudioSignal ();
+	public float Tick() {
+		if (pos >= len) return 0f;
+		return data[pos++];
 	}
+
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-	public void Tic() {
-		pos += inc;
-		if (pos > 1f) pos -= 1f;
-		output.signal = 2f * (pos - 0.5f);
+	public void Retrig() {
+		pos = 0;
 	}
 }
