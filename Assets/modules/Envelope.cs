@@ -1,29 +1,38 @@
-﻿public class OscRamp {
-	private float freq;
-	private float pos;
+﻿using UnityEngine;
+using System.Collections;
+
+public class Envelope {
+
+	public AudioSignal output;
+
+	private float time;
 	private float inc;
 
-	public  AudioSignal output;
-	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-	public  float Freq {
+	public float Time {
 		get {
-			return freq;
+			return time;
 		}
 		set {
-			freq = value;
-			inc = value / CONSTANTS.SAMPLE_RATE;
+			time = value;
+			inc  = value * 0.01f;
 		}
 	}
+
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-	public OscRamp() {
-		pos    = 0f;
-		Freq   = 440f;
+	public Envelope() {
 		output = new AudioSignal();
+		Time = 0.5f;
 	}
+
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 	public void Tick() {
-		pos += inc;
-		if (pos > 1f) pos -= 1f;
-		output.signal = 2f * (pos - 0.5f);
+		if (output.signal == 0f) return;
+		output.signal -= inc;
+		if (output.signal <= 0f) output.signal = 0f;
+	}
+
+	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+	public void Retrig() {
+		output.signal = 1f;
 	}
 }

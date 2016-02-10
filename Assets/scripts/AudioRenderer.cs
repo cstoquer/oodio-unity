@@ -16,19 +16,7 @@ public class AudioRenderer : MonoBehaviour {
 	private OscRamp  oscA;
 	private RCFilter flt;
 	private Sampler  kickDrum;
-
-	private float env_time = 0.5f;
-	private float env_inc  = 0.5f * 0.01f;
-	private float env_sta  = 0.0f;
-	public float Env_time {
-		get {
-			return env_time;
-		}
-		set {
-			env_time = value;
-			env_inc  = value * 0.01f;
-		}
-	}
+	private Envelope vca;
 
 	private float clk_tmp;
 	private float clk_pos = 0.0f;
@@ -58,17 +46,18 @@ public class AudioRenderer : MonoBehaviour {
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 	// Use this for initialization
 	void Start () {
-		oscA = new OscRamp ();
-		flt = new RCFilter ();
-		kickDrum = new Sampler (kickSample);
+		oscA = new OscRamp();
+		flt = new RCFilter();
+		kickDrum = new Sampler(kickSample);
+		vca = new Envelope();
 
 		flt.input = oscA.output; // TODO: connect method
 
-		slidderCut.onValueChanged.AddListener ((float v) => {
+		slidderCut.onValueChanged.AddListener((float v) => {
 			flt.cut = v;
 		});
 
-		slidderRez.onValueChanged.AddListener ((float v) => {
+		slidderRez.onValueChanged.AddListener((float v) => {
 			flt.rez = v;
 		});
 
@@ -89,18 +78,11 @@ public class AudioRenderer : MonoBehaviour {
 	}
 
 	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-	void env_tick () {
-		if (env_sta == 0f) return;
-		env_sta -= env_inc;
-		if (env_sta <= 0f) env_sta = 0f;
-	}
-
-	//▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 	void seq_tick () {
 		if (++seq_pos >= seq_stp.Length) seq_pos = 0;
 		seq_out = freqTable.GetNote(seq_stp[seq_pos]);
 		oscA.Freq = seq_out;
-		if (seq_trg[seq_pos]) env_sta = 1f;
+		if (seq_trg[seq_pos]) vca.Retrig();
 		if (seq_kck [seq_pos]) kickDrum.Retrig();
 	}
 	
@@ -110,11 +92,12 @@ public class AudioRenderer : MonoBehaviour {
 			if (++kCounter == 64) {
 				kCounter = 0;
 				clk_tick();
-				env_tick();
+				vca.Tick();
 			}
 			flt.Tick ();
 			oscA.Tick();
-			float val = env_sta * flt.output.signal + kickDrum.Tick();
+			kickDrum.Tick ();
+			float val = vca.output.signal * flt.output.signal + kickDrum.output.signal;
 			//val *= 0.2f;
 			buffer[i]     = val;
 			buffer[i + 1] = val;
